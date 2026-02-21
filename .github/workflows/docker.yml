@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build, Push and Deploy Docker Image
 
 on:
   push:
@@ -26,4 +26,16 @@ jobs:
         tags: |
           ${{ secrets.DOCKER_USERNAME }}/githubaction-herokuwithnodejs:latest
           ${{ secrets.DOCKER_USERNAME }}/githubaction-herokuwithnodejs:${{ github.sha }}
+
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          docker pull ${{ secrets.DOCKER_USERNAME }}/githubaction-herokuwithnodejs:latest
+          docker stop myapp || true
+          docker rm myapp || true
+          docker run -d --name myapp -p 80:5006 ${{ secrets.DOCKER_USERNAME }}/githubaction-herokuwithnodejs:latest
 
