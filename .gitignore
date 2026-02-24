@@ -9,5 +9,4 @@ npm-debug.log
 .idea
 
 # Docker
-#Dockerfile
-#docker-compose.yml
+# DO NOT ignore Dockerfile or docker-compose.yml — they are needed for CI/CD
