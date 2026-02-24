@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout the code
+      # 1️⃣ Checkout the code in GitHub runner
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -38,24 +38,33 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Export secrets as environment variables
+            # 1️⃣ Set environment variables for Docker Compose
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
             export DB_USER=${{ secrets.DB_USER }}
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             export DB_NAME=${{ secrets.DB_NAME }}
 
-            # Go to deployment folder on EC2
+            # 2️⃣ Ensure deployment folder exists
             mkdir -p ~/myapp
             cd ~/myapp
 
-            # Pull latest Docker image
+            # 3️⃣ Pull latest code (docker-compose.yml must be present)
+            if [ -d ".git" ]; then
+              git reset --hard
+              git clean -fd
+              git pull
+            else
+              git clone https://github.com/zahid-IT/githubaction-HerokuWithNode.js.git .
+            fi
+
+            # 4️⃣ Pull latest Docker image
             docker pull $DOCKER_USERNAME/devops-3tier-heroku-github-actions:latest
 
-            # Make sure old containers are removed
+            # 5️⃣ Stop and remove old containers
             docker compose down || true
 
-            # Start containers (app + postgres)
+            # 6️⃣ Start containers (app + postgres) in detached mode
             docker compose up -d
 
-            # Clean up old images
+            # 7️⃣ Clean up old dangling images
             docker image prune -f
