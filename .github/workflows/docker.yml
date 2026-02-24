@@ -54,7 +54,7 @@ jobs:
               git clean -fd
               git pull
             else
-              git clone https://github.com/zahid-IT/githubaction-HerokuWithNode.js.git .
+              git clone https://github.com/zahid-IT/devops-3tier-heroku-github-actions .
             fi
 
             # 4️⃣ Pull latest Docker image
