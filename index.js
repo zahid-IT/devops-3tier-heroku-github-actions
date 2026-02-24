@@ -1,36 +1,78 @@
-const express = require('express')
-const path = require('path')
+const express = require("express");
+const path = require("path");
+const pool = require("./db"); // PostgreSQL connection
 
-const port = process.env.PORT || 5006
+const port = process.env.PORT || 5006;
 
-const app = express()
+const app = express();
 
-app.use(express.static(path.join(__dirname, 'public')))
-app.set('views', path.join(__dirname, 'views'))
-app.set('view engine', 'ejs')
+// Middleware
+app.use(express.static(path.join(__dirname, "public")));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.get('/', (req, res) => {
-  console.log(`Rendering 'pages/index' for route '/'`)
-  res.render('pages/index')
-})
+// View engine setup
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "ejs");
 
-const server = app.listen(port, () => {
-  console.log(`Listening on ${port}`)
-})
+// Home route
+app.get("/", (req, res) => {
+  console.log("Rendering homepage");
+  res.render("pages/index");
+});
 
-// The number of seconds an idle Keep-Alive connection is kept open. This should be greater than the Heroku Router's
-// Keep-Alive idle timeout of 90 seconds:
-// - to ensure that the closing of idle connections is always initiated by the router and not the Node.js server
-// - to prevent a race condition if the router sends a request to the app just as Node.js is closing the connection
-// https://devcenter.heroku.com/articles/http-routing#keepalives
-// https://nodejs.org/api/http.html#serverkeepalivetimeout
-server.keepAliveTimeout = 95 * 1000
-
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM signal received: gracefully shutting down')
-  if (server) {
-    server.close(() => {
-      console.log('HTTP server closed')
-    })
+// Database test route
+app.get("/db", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+    res.json({
+      status: "success",
+      time: result.rows[0].now,
+    });
+  } catch (error) {
+    console.error("Database error:", error.message);
+    res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
   }
-})
+});
+
+// Example route to show DB info in EJS page
+app.get("/db-view", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+    res.render("pages/db", {
+      dbTime: result.rows[0].now,
+    });
+  } catch (error) {
+    res.render("pages/db", {
+      dbTime: "Database connection failed",
+    });
+  }
+});
+
+// Start server
+const server = app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
+
+// Keep alive timeout (Heroku / production safe)
+server.keepAliveTimeout = 95 * 1000;
+
+// Graceful shutdown
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received. Shutting down...");
+  server.close(() => {
+    console.log("Server closed.");
+    process.exit(0);
+  });
+});
+
+process.on("SIGINT", () => {
+  console.log("SIGINT received. Shutting down...");
+  server.close(() => {
+    console.log("Server closed.");
+    process.exit(0);
+  });
+});

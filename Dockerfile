@@ -1,20 +1,22 @@
-# Use official Node LTS image
 FROM node:18-alpine
 
 # Create app directory
 WORKDIR /app
 
-# Copy package files first (better caching)
+# Copy dependency files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --production
+# Install only production dependencies
+RUN npm install --omit=dev
 
-# Copy remaining project files
+# Copy source code
 COPY . .
 
-# Expose port (Heroku app uses 5000)
+# Set environment
+ENV NODE_ENV=production
+
+# Expose app port
 EXPOSE 5006
 
-# Start the app
+# Run application
 CMD ["npm", "start"]
