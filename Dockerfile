@@ -20,3 +20,7 @@ EXPOSE 5006
 
 # Run application
 CMD ["npm", "start"]
+
+
+
+###################################
