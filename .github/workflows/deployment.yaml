@@ -11,21 +11,19 @@ jobs:
 
     steps:
 
-      # 1️⃣ Checkout code on GitHub runner
+      # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-
-      # 2️⃣ Login to Docker Hub
+      # Login to Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-
-      # 3️⃣ Build and Push Docker Image
-      - name: Build & Push Docker Image
+      # Build and Push Image
+      - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -34,9 +32,8 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/devops-3tier-heroku-github-actions:latest
             ${{ secrets.DOCKER_USERNAME }}/devops-3tier-heroku-github-actions:${{ github.sha }}
 
-
-      # 4️⃣ Deploy on EC2
-      - name: Deploy to EC2 via SSH and Docker Compose
+      # Deploy to EC2
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -47,89 +44,41 @@ jobs:
 
             echo "=== Starting Deployment ==="
 
-            # Set environment variables
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
             export DB_USER=${{ secrets.DB_USER }}
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             export DB_NAME=${{ secrets.DB_NAME }}
 
-            # Ensure deployment directory exists
             mkdir -p ~/myapp
             cd ~/myapp
 
-
-            ########################################
-            # FIX: Always use correct repository
-            ########################################
-
             if [ -d ".git" ]; then
-
-              echo "Fixing git remote..."
-              git remote set-url origin https://github.com/zahid-IT/devops-3tier-heroku-github-actions.git
-
-              echo "Fetching latest code..."
+              echo "Updating repository..."
               git fetch origin main
-
-              echo "Resetting to latest version..."
               git reset --hard origin/main
-
             else
-
               echo "Cloning repository..."
               git clone https://github.com/zahid-IT/devops-3tier-heroku-github-actions.git .
-
             fi
 
-
-            ########################################
-            # Verify docker-compose exists
-            ########################################
-
             if [ ! -f "docker-compose.yml" ]; then
-              echo "ERROR: docker-compose.yml not found!"
+              echo "ERROR: docker-compose.yml not found"
               exit 1
             fi
 
-            echo "docker-compose.yml found"
-
-
-            ########################################
-            # Pull latest Docker image
-            ########################################
-
-            echo "Pulling latest Docker image..."
+            echo "Pull latest image"
             docker pull $DOCKER_USERNAME/devops-3tier-heroku-github-actions:latest
 
-
-            ########################################
-            # Stop existing containers
-            ########################################
-
-            echo "Stopping old containers..."
+            echo "Stop old containers"
             docker compose down || true
 
-
-            ########################################
-            # Start containers
-            ########################################
-
-            echo "Starting new containers..."
+            echo "Start new containers"
             docker compose up -d
 
-
-            ########################################
-            # Show container status
-            ########################################
-
-            echo "Running containers:"
+            echo "Container status"
             docker compose ps
 
-
-            ########################################
-            # Cleanup
-            ########################################
-
+            echo "Cleanup old images"
             docker image prune -f
 
-
-            echo "=== Deployment Completed Successfully ==="
+            echo "=== Deployment Completed ==="
