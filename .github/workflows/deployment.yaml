@@ -10,8 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
-      # 1️⃣ Checkout code on GitHub runner
+      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -32,7 +31,7 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/devops-3tier-heroku-github-actions:latest
             ${{ secrets.DOCKER_USERNAME }}/devops-3tier-heroku-github-actions:${{ github.sha }}
 
-      # 4️⃣ Deploy on EC2
+      # 4️⃣ Deploy on EC2 via SSH
       - name: Deploy to EC2 via SSH and Docker Compose
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -41,8 +40,13 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
           script: |
-
             echo "=== Starting Deployment ==="
+
+            # Assign secrets to shell variables
+            DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
+            DB_USER="${{ secrets.DB_USER }}"
+            DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            DB_NAME="${{ secrets.DB_NAME }}"
 
             # Ensure deployment directory exists
             mkdir -p ~/myapp
@@ -65,20 +69,16 @@ jobs:
               exit 1
             fi
 
-            # ✅ Create .env file for Docker Compose
+            # ✅ Create .env file safely
             echo "Creating .env file..."
-            cat > .env <<EOF
-DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
-DB_USER=${{ secrets.DB_USER }}
-DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-DB_NAME=${{ secrets.DB_NAME }}
-EOF
+            printf "DOCKER_USERNAME=%s\nDB_USER=%s\nDB_PASSWORD=%s\nDB_NAME=%s\n" \
+              "$DOCKER_USERNAME" "$DB_USER" "$DB_PASSWORD" "$DB_NAME" > .env
 
             # Pull latest Docker image
             echo "Pulling latest Docker image..."
-            docker pull ${{ secrets.DOCKER_USERNAME }}/devops-3tier-heroku-github-actions:latest
+            docker pull "$DOCKER_USERNAME/devops-3tier-heroku-github-actions:latest"
 
-            # Stop and remove old containers
+            # Stop existing containers
             echo "Stopping old containers..."
             docker compose down || true
 
