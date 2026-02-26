@@ -4,6 +4,9 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
+# Install build tools for native modules like 'pg'
+RUN apk add --no-cache python3 make g++ libc-dev postgresql-dev
+
 # Copy package files first (for caching)
 COPY package*.json ./
 
