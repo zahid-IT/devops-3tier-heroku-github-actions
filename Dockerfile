@@ -1,23 +1,23 @@
+# Use official Node.js 18 alpine image
 FROM node:18-alpine
 
-# Create app directory
+# Set working directory
 WORKDIR /app
 
-# Copy dependency files
+# Copy package files first (for caching)
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm install --omit=dev
+# Install all dependencies (including pg)
+RUN npm install --production
 
-# Copy source code
+# Copy application code
 COPY . .
 
-# Set environment
+# Set production environment
 ENV NODE_ENV=production
 
-# Expose app port
+# Expose application port
 EXPOSE 5006
 
-# Run application
-CMD ["npm", "start"]
-
+# Start the app directly
+CMD ["node", "index.js"]
