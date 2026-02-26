@@ -10,9 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout code
+
+      # 1️⃣ Checkout code on GitHub runner
       - name: Checkout code
         uses: actions/checkout@v4
+
 
       # 2️⃣ Login to Docker Hub
       - name: Login to Docker Hub
@@ -20,6 +22,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+
 
       # 3️⃣ Build and Push Docker Image
       - name: Build & Push Docker Image
@@ -31,7 +34,8 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/devops-3tier-heroku-github-actions:latest
             ${{ secrets.DOCKER_USERNAME }}/devops-3tier-heroku-github-actions:${{ github.sha }}
 
-      # 4️⃣ Deploy on EC2 via SSH
+
+      # 4️⃣ Deploy on EC2
       - name: Deploy to EC2 via SSH and Docker Compose
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -40,57 +44,92 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
           script: |
+
             echo "=== Starting Deployment ==="
 
-            # Assign secrets to shell variables
-            DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
-            DB_USER="${{ secrets.DB_USER }}"
-            DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-            DB_NAME="${{ secrets.DB_NAME }}"
+            # Set environment variables
+            export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+            export DB_USER=${{ secrets.DB_USER }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            export DB_NAME=${{ secrets.DB_NAME }}
 
             # Ensure deployment directory exists
             mkdir -p ~/myapp
             cd ~/myapp
 
-            # Clone or update repository
+
+            ########################################
+            # FIX: Always use correct repository
+            ########################################
+
             if [ -d ".git" ]; then
-              echo "Updating existing repository..."
+
+              echo "Fixing git remote..."
               git remote set-url origin https://github.com/zahid-IT/devops-3tier-heroku-github-actions.git
+
+              echo "Fetching latest code..."
               git fetch origin main
+
+              echo "Resetting to latest version..."
               git reset --hard origin/main
+
             else
+
               echo "Cloning repository..."
               git clone https://github.com/zahid-IT/devops-3tier-heroku-github-actions.git .
+
             fi
 
-            # Verify docker-compose.yml exists
+
+            ########################################
+            # Verify docker-compose exists
+            ########################################
+
             if [ ! -f "docker-compose.yml" ]; then
               echo "ERROR: docker-compose.yml not found!"
               exit 1
             fi
 
-            # ✅ Create .env file safely
-            echo "Creating .env file..."
-            printf "DOCKER_USERNAME=%s\nDB_USER=%s\nDB_PASSWORD=%s\nDB_NAME=%s\n" \
-              "$DOCKER_USERNAME" "$DB_USER" "$DB_PASSWORD" "$DB_NAME" > .env
+            echo "docker-compose.yml found"
 
+
+            ########################################
             # Pull latest Docker image
-            echo "Pulling latest Docker image..."
-            docker pull "$DOCKER_USERNAME/devops-3tier-heroku-github-actions:latest"
+            ########################################
 
+            echo "Pulling latest Docker image..."
+            docker pull $DOCKER_USERNAME/devops-3tier-heroku-github-actions:latest
+
+
+            ########################################
             # Stop existing containers
+            ########################################
+
             echo "Stopping old containers..."
             docker compose down || true
 
-            # Start containers in detached mode
+
+            ########################################
+            # Start containers
+            ########################################
+
             echo "Starting new containers..."
             docker compose up -d
 
-            # Show running containers
+
+            ########################################
+            # Show container status
+            ########################################
+
             echo "Running containers:"
             docker compose ps
 
-            # Cleanup dangling images
+
+            ########################################
+            # Cleanup
+            ########################################
+
             docker image prune -f
+
 
             echo "=== Deployment Completed Successfully ==="
