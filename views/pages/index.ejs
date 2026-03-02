@@ -14,90 +14,64 @@
         <img src="/lang-logo.png" alt="Node.js Logo">
       </a>
 
-      <h1>My First Node.js App on Heroku 🚀</h1>
+      <h1>Node.js App Running on Docker + EC2 🚀</h1>
       <p class="lead">
-        Once you start building, you realize you can do it.  
-        Getting started with Node.js on Heroku.  
-        Special thanks to Waqas Shehzad for encouraging me to learn and grow.
+        This application is deployed using Docker, GitHub Actions CI/CD, and PostgreSQL database.
       </p>
 
-      <a type="button" class="btn btn-lg btn-default"
-         href="https://devcenter.heroku.com/articles/getting-started-with-nodejs">
-        <span class="glyphicon glyphicon-flash"></span>
-        Getting Started on Heroku with Node.js
+      <hr>
+
+      <!-- Signup Button -->
+      <a href="/signup" class="btn btn-lg btn-primary">
+        Signup
       </a>
 
-      <a type="button" class="btn btn-lg btn-default"
-         href="https://devcenter.heroku.com/articles/getting-started-with-nodejs-fir">
-        <span class="glyphicon glyphicon-flash"></span>
-        Getting Started on Heroku Fir with Node.js
+      <!-- Login Button -->
+      <a href="/login" class="btn btn-lg btn-success">
+        Login
       </a>
 
-      <a type="button" class="btn btn-lg btn-primary"
-         href="https://github.com/heroku/nodejs-getting-started">
-        <span class="glyphicon glyphicon-download"></span>
-        Source on GitHub
+      <!-- Users Button -->
+      <a href="/users" class="btn btn-lg btn-info">
+        View Users
       </a>
+
     </div>
   </div>
 
   <div class="container">
-    <div class="lead">
-      To deploy your own copy and learn the fundamentals of the Heroku platform, follow one of these tutorials:
-      <ul>
-        <li>
-          <a href="https://devcenter.heroku.com/articles/getting-started-with-nodejs" class="alert-link">
-            Getting Started on Heroku with Node.js
-          </a>
-        </li>
-        <li>
-          <a href="https://devcenter.heroku.com/articles/getting-started-with-nodejs-fir" class="alert-link">
-            Getting Started on Heroku Fir with Node.js
-          </a>
-        </li>
-      </ul>
+
+    <div class="row">
+
+      <div class="col-md-4">
+        <h3>Frontend</h3>
+        <p>
+          Running on Node.js Express and accessible via EC2 public IP.
+        </p>
+      </div>
+
+      <div class="col-md-4">
+        <h3>Backend</h3>
+        <p>
+          Express server handling routes, authentication, and API requests.
+        </p>
+      </div>
+
+      <div class="col-md-4">
+        <h3>Database</h3>
+        <p>
+          PostgreSQL running in Docker container and connected internally.
+        </p>
+      </div>
+
     </div>
 
     <hr>
 
-    <div class="row">
-      <div class="col-md-6">
-        <h3><span class="glyphicon glyphicon-info-sign"></span> How This Sample App Works</h3>
-        <ul>
-          <li>This app was deployed to Heroku using Git.</li>
-          <li>When Heroku receives the source code, it installs dependencies from <code>package.json</code> and creates a deployable build artifact.</li>
-          <li>The platform spins up a dyno (a lightweight container) where the application runs in an isolated environment.</li>
-          <li>You can scale, manage, and extend your app using add-on services via the Heroku Dashboard or CLI.</li>
-        </ul>
-      </div>
-
-      <div class="col-md-6">
-        <h3><span class="glyphicon glyphicon-link"></span> Next Steps</h3>
-        <ul>
-          <li>
-            If you're following the Getting Started guide, return to the tutorial and continue with the next steps.
-          </li>
-        </ul>
-
-        <h3><span class="glyphicon glyphicon-link"></span> Helpful Links</h3>
-        <ul>
-          <li><a href="https://www.heroku.com/home">Heroku</a></li>
-          <li><a href="https://devcenter.heroku.com/">Heroku Dev Center</a></li>
-          <li><a href="https://devcenter.heroku.com/articles/getting-started-with-nodejs">Getting Started on Heroku with Node.js</a></li>
-          <li><a href="https://devcenter.heroku.com/articles/getting-started-with-nodejs-fir">Getting Started on Heroku Fir with Node.js</a></li>
-          <li><a href="https://devcenter.heroku.com/articles/deploying-nodejs">Deploying Node Apps on Heroku</a></li>
-        </ul>
-      </div>
+    <div class="alert alert-success text-center">
+      Your DevOps 3-Tier Architecture is working successfully 🎉
     </div>
 
-    <div class="row" style="margin-top:1em">
-      <div class="col-md-12">
-        <p class="alert alert-info" role="alert">
-          Please work through the Getting Started guide, even if you already know how to build such an application.
-          It covers the essential concepts required to build, deploy, and scale your own apps on Heroku.
-        </p>
-      </div>
-    </div>
   </div>
 
 </body>
