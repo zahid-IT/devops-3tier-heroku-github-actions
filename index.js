@@ -16,27 +16,40 @@ app.set("view engine", "ejs");
 
 
 // ========================================
-// DATABASE CONNECTION TEST
+// WAIT FOR DATABASE CONNECTION
 // ========================================
 
-async function testDB() {
-  try {
-    const result = await pool.query("SELECT NOW()");
-    console.log("Connected to PostgreSQL:", result.rows[0].now);
-  } catch (err) {
-    console.error("PostgreSQL connection error:", err.message);
+async function waitForDB() {
+
+  while (true) {
+
+    try {
+
+      const res = await pool.query("SELECT NOW()");
+      console.log("Connected to PostgreSQL:", res.rows[0].now);
+
+      break;
+
+    } catch (err) {
+
+      console.log("Waiting for PostgreSQL...");
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+    }
+
   }
+
 }
 
-testDB();
-
 
 // ========================================
-// CREATE USERS TABLE (AUTO)
+// CREATE USERS TABLE
 // ========================================
 
 async function createTable() {
+
   try {
+
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -50,55 +63,53 @@ async function createTable() {
     console.log("Users table ready");
 
   } catch (err) {
+
     console.error("Table creation error:", err.message);
+
   }
+
 }
 
-createTable();
-
 
 // ========================================
-// HOME PAGE
+// ROUTES
 // ========================================
 
+// HOME
 app.get("/", (req, res) => {
-  console.log("Rendering homepage");
   res.render("pages/index");
 });
 
 
-// ========================================
-// DATABASE TEST ROUTE
-// ========================================
-
+// DB TEST
 app.get("/db", async (req, res) => {
+
   try {
+
     const result = await pool.query("SELECT NOW()");
+
     res.json({
       status: "connected",
-      time: result.rows[0].now,
+      time: result.rows[0].now
     });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      status: "error",
-      error: err.message,
-    });
+
+    res.status(500).json({ error: err.message });
+
   }
+
 });
 
 
 // ========================================
-// SIGNUP ROUTES
+// SIGNUP
 // ========================================
 
-// show signup form
 app.get("/signup", (req, res) => {
   res.render("pages/signup");
 });
 
-
-// insert user into database
 app.post("/signup", async (req, res) => {
 
   const { name, email, password } = req.body;
@@ -106,13 +117,11 @@ app.post("/signup", async (req, res) => {
   try {
 
     const result = await pool.query(
-      `INSERT INTO users (name, email, password)
-       VALUES ($1, $2, $3)
-       RETURNING *`,
+      "INSERT INTO users (name,email,password) VALUES ($1,$2,$3) RETURNING *",
       [name, email, password]
     );
 
-    console.log("User inserted into DB:", result.rows[0]);
+    console.log("User inserted:", result.rows[0]);
 
     res.redirect("/users");
 
@@ -132,16 +141,13 @@ app.post("/signup", async (req, res) => {
 
 
 // ========================================
-// LOGIN ROUTES
+// LOGIN
 // ========================================
 
-// show login form
 app.get("/login", (req, res) => {
   res.render("pages/login");
 });
 
-
-// verify login
 app.post("/login", async (req, res) => {
 
   const { email, password } = req.body;
@@ -176,7 +182,7 @@ app.post("/login", async (req, res) => {
 
 
 // ========================================
-// USERS LIST
+// USERS PAGE
 // ========================================
 
 app.get("/users", async (req, res) => {
@@ -187,9 +193,7 @@ app.get("/users", async (req, res) => {
       "SELECT * FROM users ORDER BY id DESC"
     );
 
-    res.render("pages/users", {
-      users: result.rows
-    });
+    res.render("pages/users", { users: result.rows });
 
   } catch (err) {
 
@@ -202,24 +206,26 @@ app.get("/users", async (req, res) => {
 
 
 // ========================================
-// SERVER START
+// START SERVER
 // ========================================
 
-const server = app.listen(port, "0.0.0.0", () => {
-  console.log(`Server running on port ${port}`);
-});
+async function startServer() {
+
+  await waitForDB();
+  await createTable();
+
+  app.listen(port, "0.0.0.0", () => {
+    console.log(`Server running on port ${port}`);
+  });
+
+}
+
+startServer();
 
 
 // ========================================
 // GRACEFUL SHUTDOWN
 // ========================================
 
-process.on("SIGTERM", () => {
-  console.log("SIGTERM received. Closing server...");
-  server.close(() => process.exit(0));
-});
-
-process.on("SIGINT", () => {
-  console.log("SIGINT received. Closing server...");
-  server.close(() => process.exit(0));
-});
+process.on("SIGTERM", () => process.exit(0));
+process.on("SIGINT", () => process.exit(0));
