@@ -1,21 +1,47 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <%- include ("../partials/header.ejs") %>
+  <%- include("../partials/header.ejs") %>
 </head>
 
 <body>
 
-<%- include ("../partials/nav.ejs") %>
+<%- include("../partials/nav.ejs") %>
 
 <div class="container">
-<h2>Database Results</h2>
 
-<ul>
-    <% results.forEach(function(r) { %>
-        <li><%= r.id %> - <%= r.name %></li>
-    <% }); %>
-</ul>
+<h2>Database Users</h2>
+
+<table border="1">
+
+<tr>
+  <th>ID</th>
+  <th>Name</th>
+  <th>Email</th>
+</tr>
+
+<% if (users && users.length > 0) { %>
+
+  <% users.forEach(function(user) { %>
+
+  <tr>
+    <td><%= user.id %></td>
+    <td><%= user.name %></td>
+    <td><%= user.email %></td>
+  </tr>
+
+  <% }); %>
+
+<% } else { %>
+
+<tr>
+  <td colspan="3">No users found</td>
+</tr>
+
+<% } %>
+
+</table>
 
 </div>
 
